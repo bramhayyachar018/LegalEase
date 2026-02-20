@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LegalEase</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>⚖️ LegalEase</h1>
+    <p class="subtitle">AI-Powered Legal Documentation Generator</p>
+
+    <form id="legalForm">
+
+        <div class="form-group">
+            <label>Document Type</label>
+            <select id="document_type" required>
+                <option value="">Select Document</option>
+                <option>Employment Contract</option>
+                <option>Lease Agreement</option>
+                <option>Service Agreement</option>
+                <option>Non-Disclosure Agreement</option>
+                <option>Partnership Agreement</option>
+                <option>Shareholder Agreement</option>
+                <option>Internship Agreement</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label id="partyOneLabel">Party One</label>
+            <input type="text" id="party_one" placeholder="Enter first party name" required>
+        </div>
+
+        <div class="form-group">
+            <label id="partyTwoLabel">Party Two</label>
+            <input type="text" id="party_two" placeholder="Enter second party name" required>
+        </div>
+
+        <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" id="start_date">
+        </div>
+
+        <div class="form-group full-width">
+            <label>Additional Terms</label>
+            <textarea id="additional_terms" placeholder="Optional additional clauses..."></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">Generate Document</button>
+
+    </form>
+
+    <div id="loading" class="hidden">
+        Generating document... Please wait.
+    </div>
+
+    <div id="result" class="hidden"></div>
+
+</div>
+
+<script>
+
+// 🔹 Dynamic Label Logic
+document.getElementById("document_type").addEventListener("change", function() {
+    const selected = this.value;
+
+    const partyOneLabel = document.getElementById("partyOneLabel");
+    const partyTwoLabel = document.getElementById("partyTwoLabel");
+
+    if (selected === "Employment Contract") {
+        partyOneLabel.innerText = "Employer";
+        partyTwoLabel.innerText = "Employee";
+    } 
+    else if (selected === "Lease Agreement") {
+        partyOneLabel.innerText = "Lessor (Landlord)";
+        partyTwoLabel.innerText = "Lessee (Tenant)";
+    } 
+    else if (selected === "Non-Disclosure Agreement") {
+        partyOneLabel.innerText = "Disclosing Party";
+        partyTwoLabel.innerText = "Receiving Party";
+    } 
+    else {
+        partyOneLabel.innerText = "Party One";
+        partyTwoLabel.innerText = "Party Two";
+    }
+});
+
+
+// 🔹 Form Submission Logic
+document.getElementById("legalForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const documentType = document.getElementById("document_type").value;
+    const partyOne = document.getElementById("party_one").value.trim();
+    const partyTwo = document.getElementById("party_two").value.trim();
+
+    if (!documentType || !partyOne || !partyTwo) {
+        alert("Please fill all required fields.");
+        return;
+    }
+
+    const loading = document.getElementById("loading");
+    const resultDiv = document.getElementById("result");
+    const submitBtn = document.getElementById("submitBtn");
+
+    loading.classList.remove("hidden");
+    resultDiv.classList.add("hidden");
+    submitBtn.disabled = true;
+
+    const data = {
+        document_type: documentType,
+        party_one: partyOne,
+        party_two: partyTwo,
+        start_date: document.getElementById("start_date").value,
+        additional_terms: document.getElementById("additional_terms").value
+    };
+
+    try {
+        const response = await fetch("/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        loading.classList.add("hidden");
+        submitBtn.disabled = false;
+
+        if (result.status === "success") {
+            resultDiv.innerText = result.document;
+            resultDiv.classList.remove("hidden");
+        } else {
+            resultDiv.innerText = "Error: " + result.message;
+            resultDiv.classList.remove("hidden");
+        }
+
+    } catch (error) {
+        loading.classList.add("hidden");
+        submitBtn.disabled = false;
+        alert("Something went wrong. Please try again.");
+    }
+});
+
+</script>
+
+</body>
+</html>
